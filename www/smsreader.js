@@ -27,6 +27,29 @@ function fetchSms(action, since, searchtexts, senderids, permissions) {
         });
 }
 
+function fetchSmsSent(action, since, searchtexts, senderids, permissions) {
+    let _senderids = [];
+    let _searchtexts = [];
+    let _since = 0;
+    if (senderids && senderids.length) {
+        _senderids = senderids;
+    }
+    if (searchtexts && searchtexts.length) {
+        _searchtexts = searchtexts;
+    }
+    if (since) {
+        _since = +(new Date(since));
+    }
+    return ensurePermission(permissions)
+        .then((success) => {
+            return new Promise((resolve, reject) => {
+                cordova.exec(resolve, reject, "SMSReader", action, [_since, _searchtexts, _senderids]);
+            });
+        }, (err) => {
+            return Promise.reject(err);
+        });
+}
+
 module.exports = {
     getAllSMS: function (since) {
         return fetchSms("all", since, null, null, ['read']);
@@ -39,5 +62,8 @@ module.exports = {
     },
     filterBodyOrSenders: function (searchtexts, senderids, since) {
         return fetchSms("filterbodyorsenders", since, searchtexts, senderids, ['read']);
-    }
+    },
+    getAllSentSMS: function (since) {
+        return fetchSmsSent("allsent", since, null, null, ['read']);
+    },
 };

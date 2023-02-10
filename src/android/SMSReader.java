@@ -68,6 +68,9 @@ public class SMSReader extends CordovaPlugin {
                 }
             }
                 break;
+            case "allsent":
+                sms = this.fetchSMSSent(data.getLong(0), new String[] {}, new String[] {});            
+                break;
             default: {
                 callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
                 return false;
@@ -145,6 +148,27 @@ public class SMSReader extends CordovaPlugin {
         ArrayList<SMS> lstSms = new ArrayList<SMS>();
 
         Uri message = Uri.parse("content://sms/inbox");
+        ContentResolver contentResolver = cordova.getActivity().getContentResolver();
+
+        Cursor cursor = contentResolver.query(message, null, null, null, null);
+        int totalSMS = cursor.getCount();
+        if (cursor.moveToFirst()) {
+            for (int i = 0; i < totalSMS; i++) {
+                SMS sms = new SMS(cursor);
+                if (sms.applyFilters(since, searchText, senderids)) {
+                    lstSms.add(sms);
+                }
+                cursor.moveToNext();
+            }
+        }
+        cursor.close();
+        return lstSms;
+    }
+    
+    private ArrayList<SMS> fetchSMSSent(long since, String[] searchText, String[] senderids) {
+        ArrayList<SMS> lstSms = new ArrayList<SMS>();
+
+        Uri message = Uri.parse("content://sms/sent");
         ContentResolver contentResolver = cordova.getActivity().getContentResolver();
 
         Cursor cursor = contentResolver.query(message, null, null, null, null);
